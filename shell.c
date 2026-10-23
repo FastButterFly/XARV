@@ -13,7 +13,7 @@ static struct Account** g_accountBuffer;
 
 struct Account {
 	int ID;
-	double balance;
+	long long balance;
 	const char* first_name;
 	const char* last_name;
 	unsigned int ssn;
@@ -150,12 +150,12 @@ void balance_command_handler() {
 		return;
 	}
 
-	printf(" * Balance: %.10f PLN\n", g_currentAccount->balance);
+	printf(" * Balance: %.10f PLN\n", (double)g_currentAccount->balance / 100.0f);
 	return;
 }
 
-bool generate_transaction(struct Account* sender, struct Account* reciver, float ammount) {
-	if(ammount < 0.0f) {
+bool generate_transaction(struct Account* sender, struct Account* reciver, long long ammount) {
+	if(ammount < 0) {
 		return false;
 	}
 
@@ -173,8 +173,8 @@ bool generate_transaction(struct Account* sender, struct Account* reciver, float
 	return true;
 }
 
-bool atm_terminal_alike_transaction(struct Account* reciver, float ammount) {
-	if(ammount < 0.0f) {
+bool atm_terminal_alike_transaction(struct Account* reciver, long long ammount) {
+	if(ammount < 0) {
 		return false;
 	}
 
@@ -188,14 +188,14 @@ void generate_atm_alike_transaction_command_handler() {
 		return;
 	}
 
-	float ammount = 0;
-	printf( " * Select ammount to generate in transaction >> ");
-	if(scanf("%f", &ammount) == 0) {
+	long long ammount = 0;
+	printf( " * Select ammount to generate in transaction [in gr not PLN] >> ");
+	if(scanf("%lld", &ammount) == 0) {
 		printf("Not a number\n");
 		return;
 	}
 
-	if(ammount < 0.0f) {
+	if(ammount < 0) {
 		printf(" * Values below 0 are not allowed\n");
 		return;
 	}
@@ -240,12 +240,12 @@ void generate_transaction_command_handler() {
 		return;
 	}
 
-	float ammount = 0;
+	long long ammount = 0;
 	printf(" * Preparing transaction between account %d and %d\n", g_currentAccount->ID, targetAccount->ID);
-	printf(" * Provide ammount >> ");
-	scanf("%f", &ammount);
+	printf(" * Provide ammount [in gr not PLN] >> ");
+	scanf("%lld", &ammount);
 
-	if(ammount < 0.0f) {
+	if(ammount < 0) {
 		printf(" * Values under 0 are not allowed\n");
 		return;
 	}
