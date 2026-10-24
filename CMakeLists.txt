@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(SOURCES
 	main.c
 	shell.c
-	commands.c
+	log.c
 )
 
 add_executable(XARV ${SOURCES})

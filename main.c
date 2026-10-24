@@ -4,6 +4,8 @@
 
 #include "shell.h"
 
+#include "log.h"
+
 int main() {
 	printf("ZARV - Banking system.\nCreated by: F4stbutterfly\n\n");
 
@@ -21,8 +23,11 @@ int main() {
 
 	if(strcmp(buf, "admin") != 0 || strcmp(passwd, "admin") != 0) {
 		printf(" * Invalid credentials. Access denied....\n");
+		print_log(-2, "Failed login attempt. Invalid credentials");
 		return 0;
 	}
+
+	print_log(-2, "Logging in.");
 
 	free(buf);
 	free(passwd);

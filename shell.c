@@ -6,6 +6,8 @@
 
 #include <time.h>
 
+#include "log.h"
+
 static struct Account* g_currentAccount;
 static int latestID = 0;
 
@@ -51,6 +53,22 @@ struct Account* new_register_account(int* lastest_id,
 	ptr->mothers_name = mname;
 	ptr->id_num = id_num;
 	ptr->creation_date = (unsigned long long)time(NULL);
+
+	int print_id = -1;
+
+	if(g_currentAccount != nullptr) {
+		print_id = g_currentAccount->ID;
+	}
+
+	print_log(print_id, "New account registered with:\n\tID: %d\n\tFirst name: %s\n\tLast name: %s\n\tSSN: %d\n\tDOB: %lld\n\tMother Name: %s\n\tID Number: %s\n", 
+		ptr->ID, 
+		fname, 
+		lname, 
+		ssn, 
+		dob,
+		mname,
+		id_num);
+
 	return ptr;
 }
 
@@ -150,35 +168,49 @@ void balance_command_handler() {
 		return;
 	}
 
-	printf(" * Balance: %.10f PLN\n", (double)g_currentAccount->balance / 100.0f);
+	printf(" * Balance: %.2f PLN\n", (double)g_currentAccount->balance / 100.0f);
 	return;
 }
 
 bool generate_transaction(struct Account* sender, struct Account* reciver, long long ammount) {
+
+	print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr", g_currentAccount->ID, reciver->ID, ammount);
+
 	if(ammount < 0) {
+		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Ammount is 0 or under", g_currentAccount->ID, reciver->ID, ammount);
 		return false;
 	}
 
 	if(ammount > sender->balance) {
+		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Balance too low", g_currentAccount->ID, reciver->ID, ammount);
 		return false;
 	}
 
 	if(sender->ID == reciver->ID) {
+		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Same IDs", g_currentAccount->ID, reciver->ID, ammount);
 		return false;
 	}
 
 	sender->balance -= ammount;
 	reciver->balance += ammount;
 
+	print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Successful", g_currentAccount->ID, reciver->ID, ammount);
+
 	return true;
 }
 
 bool atm_terminal_alike_transaction(struct Account* reciver, long long ammount) {
+
+	print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr", reciver->ID, ammount);
+
 	if(ammount < 0) {
+		print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr. Failed: Ammounnt is 0 or under", reciver->ID, ammount);
 		return false;
 	}
 
 	reciver->balance += ammount;
+
+	print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr. Successful", reciver->ID, ammount);
 	return true;
 }
 
@@ -201,7 +233,7 @@ void generate_atm_alike_transaction_command_handler() {
 	}
 
 	if(atm_terminal_alike_transaction(g_currentAccount, ammount)) {
-		printf(" * Transaction was succesfull\n");
+		printf(" * Transaction was succesful\n");
 	} else {
 		printf(" * Transaction failed\n");
 	}
@@ -256,7 +288,7 @@ void generate_transaction_command_handler() {
 	}
 
 	if(generate_transaction(g_currentAccount, targetAccount, ammount)) {
-		printf(" * Transaction succesfull\n");
+		printf(" * Transaction succesful\n");
 	} else {
 		printf(" * Transaction failed\n");
 	}
