@@ -25,6 +25,7 @@ bool register_account_from_database_index(int id) {
 		for(int i=0;i<1024;i++) {
 			if(getApp()->g_accountBuffer[i] == nullptr) {
 				getApp()->g_accountBuffer[i] = ptr;
+				break;
 			}
 		}
 
@@ -50,8 +51,6 @@ bool register_account_from_database_index(int id) {
 			ptr->dob,
 			ptr->mothers_name,
 			ptr->id_num);
-
-		getApp()->latestID += 1;
 	} else {
 		sqlite3_finalize(v);
 		return false;
@@ -62,9 +61,8 @@ bool register_account_from_database_index(int id) {
 }
 
 struct Account* get_account_by_id(int id) {
-	if(id > getApp()->latestID) return nullptr;
-	for(int i =0; i < getApp()->latestID; i++) {
-		if(getApp()->g_accountBuffer[i]->ID == id) {
+	for(int i =0; i < 1024; i++) {
+		if(getApp()->g_accountBuffer[i] != nullptr && getApp()->g_accountBuffer[i]->ID == id) {
 			return getApp()->g_accountBuffer[i];
 		}
 	}
@@ -72,8 +70,8 @@ struct Account* get_account_by_id(int id) {
 	if(!register_account_from_database_index(id)) {
 		return nullptr;
 	} else {
-		for(int i =0; i < getApp()->latestID; i++) {
-			if(getApp()->g_accountBuffer[i]->ID == id) {
+		for(int i=0; i < 1024; i++) {
+			if(getApp()->g_accountBuffer[i] != nullptr && getApp()->g_accountBuffer[i]->ID == id) {
 				return getApp()->g_accountBuffer[i];
 			}
 		}
@@ -103,7 +101,7 @@ struct App* getApp() {
 			sqlite3_prepare_v2(database, "SELECT max(id) FROM accounts;", -1, &v, NULL);
 			if(sqlite3_step(v) == SQLITE_ROW) {
 				if(sqlite3_column_type(v, 0) != SQLITE_NULL) {
-					getApp()->latestID = sqlite3_column_int(v, 0);
+					getApp()->latestID = sqlite3_column_int(v, 0) + 1;
 				}
 			}
 
