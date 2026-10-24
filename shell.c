@@ -4,73 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "app.h"
+
 #include <time.h>
 
 #include "log.h"
-
-static struct Account* g_currentAccount;
-static int latestID = 0;
-
-static struct Account** g_accountBuffer;
-
-struct Account {
-	int ID;
-	long long balance;
-	const char* first_name;
-	const char* last_name;
-	unsigned int ssn;
-	unsigned long long dob;
-	const char* mothers_name;
-	const char* id_num;
-	unsigned long long creation_date;
-};
-
-struct Command {
-	const char* cmd;
-	void (*handle)(void);
-};
-
-struct Account* new_register_account(int* lastest_id, 
-	const char* fname, 
-	const char* lname, 
-	unsigned int ssn, 
-	unsigned long long dob,
-	const char* mname, 
-	const char* id_num) 
-{
-	struct Account* ptr = malloc(sizeof(struct Account));
-	ptr->balance = 0;
-	ptr->ID = (*lastest_id);
-
-	if(g_accountBuffer[(*lastest_id)] == nullptr) {
-		g_accountBuffer[(*lastest_id)] = ptr;
-	}
-	(*lastest_id) += 1;
-	ptr->first_name = fname;
-	ptr->last_name = lname;
-	ptr->ssn = ssn;
-	ptr->dob = dob;
-	ptr->mothers_name = mname;
-	ptr->id_num = id_num;
-	ptr->creation_date = (unsigned long long)time(NULL);
-
-	int print_id = -1;
-
-	if(g_currentAccount != nullptr) {
-		print_id = g_currentAccount->ID;
-	}
-
-	print_log(print_id, "New account registered with:\n\tID: %d\n\tFirst name: %s\n\tLast name: %s\n\tSSN: %d\n\tDOB: %lld\n\tMother Name: %s\n\tID Number: %s\n", 
-		ptr->ID, 
-		fname, 
-		lname, 
-		ssn, 
-		dob,
-		mname,
-		id_num);
-
-	return ptr;
-}
 
 void create_account_command_handler() {
 	printf(" * Preparing.....\n");
@@ -113,7 +51,7 @@ void create_account_command_handler() {
 	}
 
 	new_register_account(
-		&latestID,
+		&getApp()->latestID,
 		first_name,
 		last_name,
 		ssn,
@@ -122,7 +60,7 @@ void create_account_command_handler() {
 		id_num
 	);
 
-	printf("Account of ID %d was created\n", latestID - 1);
+	printf("Account of ID %d was created\n", getApp()->latestID - 1);
 }
 
 struct Command* new_command(const char* cmd, void (*handle)(void)) {
@@ -152,9 +90,9 @@ void set_account_command() {
 		return;
 	}
 
-	for (int i = 0; i < latestID; i++) {
-		if(g_accountBuffer[i]->ID == id) {
-			g_currentAccount = g_accountBuffer[i];
+	for (int i = 0; i < getApp()->latestID; i++) {
+		if(getApp()->g_accountBuffer[i]->ID == id) {
+			getApp()->g_currentAccount = getApp()->g_accountBuffer[i];
 			return;
 		}
 	}
@@ -163,59 +101,17 @@ void set_account_command() {
 }
 
 void balance_command_handler() {
-	if(g_currentAccount == nullptr) {
+	if(getApp()->g_currentAccount == nullptr) {
 		printf(" * Select account first\n");
 		return;
 	}
 
-	printf(" * Balance: %.2f PLN\n", (double)g_currentAccount->balance / 100.0f);
+	printf(" * Balance: %.2f PLN\n", (double)getApp()->g_currentAccount->balance / 100.0f);
 	return;
 }
 
-bool generate_transaction(struct Account* sender, struct Account* reciver, long long ammount) {
-
-	print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr", g_currentAccount->ID, reciver->ID, ammount);
-
-	if(ammount < 0) {
-		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Ammount is 0 or under", g_currentAccount->ID, reciver->ID, ammount);
-		return false;
-	}
-
-	if(ammount > sender->balance) {
-		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Balance too low", g_currentAccount->ID, reciver->ID, ammount);
-		return false;
-	}
-
-	if(sender->ID == reciver->ID) {
-		print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Failed: Same IDs", g_currentAccount->ID, reciver->ID, ammount);
-		return false;
-	}
-
-	sender->balance -= ammount;
-	reciver->balance += ammount;
-
-	print_log(g_currentAccount->ID, "Attempt Transaction between accounts: %d %d for ammount of: %d gr. Successful", g_currentAccount->ID, reciver->ID, ammount);
-
-	return true;
-}
-
-bool atm_terminal_alike_transaction(struct Account* reciver, long long ammount) {
-
-	print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr", reciver->ID, ammount);
-
-	if(ammount < 0) {
-		print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr. Failed: Ammounnt is 0 or under", reciver->ID, ammount);
-		return false;
-	}
-
-	reciver->balance += ammount;
-
-	print_log(g_currentAccount->ID, "Attempt ATM Transaction to: %d for ammount of: %d gr. Successful", reciver->ID, ammount);
-	return true;
-}
-
 void generate_atm_alike_transaction_command_handler() {
-	if(g_currentAccount == nullptr) {
+	if(getApp()->g_currentAccount == nullptr) {
 		printf(" * Select account first\n");
 		return;
 	}
@@ -232,7 +128,7 @@ void generate_atm_alike_transaction_command_handler() {
 		return;
 	}
 
-	if(atm_terminal_alike_transaction(g_currentAccount, ammount)) {
+	if(atm_terminal_alike_transaction(getApp()->g_currentAccount, ammount) == 0) {
 		printf(" * Transaction was succesful\n");
 	} else {
 		printf(" * Transaction failed\n");
@@ -242,7 +138,7 @@ void generate_atm_alike_transaction_command_handler() {
 }
 
 void generate_transaction_command_handler() {
-	if(g_currentAccount == nullptr) {
+	if(getApp()->g_currentAccount == nullptr) {
 		printf(" * Select account first\n");
 		return;
 	}
@@ -256,9 +152,9 @@ void generate_transaction_command_handler() {
 
 	struct Account* targetAccount = nullptr;
 
-	for(int i = 0; i < latestID; i++) {
-		if(g_accountBuffer[i]->ID == target_account_id) {
-			targetAccount = g_accountBuffer[i];
+	for(int i = 0; i < getApp()->latestID; i++) {
+		if(getApp()->g_accountBuffer[i]->ID == target_account_id) {
+			targetAccount = getApp()->g_accountBuffer[i];
 		}
 	}
 
@@ -267,13 +163,13 @@ void generate_transaction_command_handler() {
 		return;
 	}
 
-	if(g_currentAccount->ID == targetAccount->ID) {
+	if(getApp()->g_currentAccount->ID == targetAccount->ID) {
 		printf(" * Account IDs must be diffrent from eachother\n");
 		return;
 	}
 
 	long long ammount = 0;
-	printf(" * Preparing transaction between account %d and %d\n", g_currentAccount->ID, targetAccount->ID);
+	printf(" * Preparing transaction between account %d and %d\n", getApp()->g_currentAccount->ID, targetAccount->ID);
 	printf(" * Provide ammount [in gr not PLN] >> ");
 	scanf("%lld", &ammount);
 
@@ -282,12 +178,12 @@ void generate_transaction_command_handler() {
 		return;
 	}
 
-	if(ammount > g_currentAccount->balance) {
+	if(ammount > getApp()->g_currentAccount->balance) {
 		printf(" * Insufficient balance to begin transaction\n");
 		return;
 	}
 
-	if(generate_transaction(g_currentAccount, targetAccount, ammount)) {
+	if(generate_transaction(getApp()->g_currentAccount, targetAccount, ammount) == 0) {
 		printf(" * Transaction succesful\n");
 	} else {
 		printf(" * Transaction failed\n");
@@ -322,21 +218,14 @@ void handle(const char* const cmd, int* val, struct Command** buf) {
 
 bool run_shell() {
 	int commands_registered = 0;
-	g_currentAccount = nullptr;
 
 	struct Command** buf = malloc(sizeof(struct Command*) * 1024);
-
-	g_accountBuffer = malloc(sizeof(struct Account*) * 1024);
 
 	for(int i = 0; i < 1024; i++) {
 		buf[i] = nullptr;
 	}
 
-	for(int i = 0; i < 1024; i++) {
-		g_accountBuffer[i] = nullptr;
-	}
-
-	register_commands(&commands_registered, g_currentAccount, buf);
+	register_commands(&commands_registered, getApp()->g_currentAccount, buf);
 
 	printf(" * Running shell\n");
 
@@ -349,10 +238,10 @@ bool run_shell() {
 	int account_id_shown = 0;
 
 	for(;;) {
-		if(g_currentAccount == nullptr) {
+		if(getApp()->g_currentAccount == nullptr) {
 			account_id_shown = -1;
 		} else {
-			account_id_shown = g_currentAccount->ID;
+			account_id_shown = getApp()->g_currentAccount->ID;
 		}
 
 		printf("@ Target account: %d >> ", account_id_shown);
