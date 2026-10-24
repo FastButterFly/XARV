@@ -90,14 +90,13 @@ void set_account_command() {
 		return;
 	}
 
-	for (int i = 0; i < getApp()->latestID; i++) {
-		if(getApp()->g_accountBuffer[i]->ID == id) {
-			getApp()->g_currentAccount = getApp()->g_accountBuffer[i];
-			return;
-		}
-	}
+	getApp()->g_currentAccount = get_account_by_id(id);
 
-	printf(" * No account of ID %d was found\n", id);
+	if(getApp()->g_currentAccount == nullptr) {
+		printf(" * No account of ID %d was found\n", id);
+	}
+	
+	return;
 }
 
 void balance_command_handler() {
@@ -150,13 +149,7 @@ void generate_transaction_command_handler() {
 		return;
 	}
 
-	struct Account* targetAccount = nullptr;
-
-	for(int i = 0; i < getApp()->latestID; i++) {
-		if(getApp()->g_accountBuffer[i]->ID == target_account_id) {
-			targetAccount = getApp()->g_accountBuffer[i];
-		}
-	}
+	struct Account* targetAccount = get_account_by_id(target_account_id);
 
 	if(targetAccount == nullptr) {
 		printf(" * Invalid account ID\n");

@@ -9,6 +9,7 @@ Features:
 - ATM alike transactions
 - Checking balance
 - Simple "login" screen [ always takes admin login and password ]
+- Database support
 
 Notice:
 

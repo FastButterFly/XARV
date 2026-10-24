@@ -39,4 +39,6 @@ struct App* getApp();
 int generate_transaction(struct Account* sender, struct Account* reciver, long long ammount);
 int atm_terminal_alike_transaction(struct Account* reciver, long long ammount);
 
+struct Account* get_account_by_id(int id);
+
 #endif
